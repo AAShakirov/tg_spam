@@ -47,6 +47,7 @@ async def spammer(client):
                 all_chats: int = len(groups[0])
                 print(f'Подключено чатов: {all_chats}')
                 groups[0].sort(key=dialog_sort, reverse=True)
+                random.shuffle(groups[0])
                 for group in groups[0]:
                     try:
                         await client.forward_messages(group, message, 'me')
@@ -75,6 +76,9 @@ async def spammer(client):
                     delay = random.randint(60, 180) * coefficient
                     print(f'[-{group.name}-] sleep {delay}')
                     await asyncio.sleep(delay)
+                    if count_sent % 10 == 0 and count_sent != 0:
+                        await send_message(count_sent=count_sent, all_chats=all_chats)
+                        break
                 delay = random.randint(60, 180) * coefficient
                 print(f'[+{count_sent}+] сообщений отправлено')
                 print(f'sleep {delay}')
@@ -86,21 +90,20 @@ async def spammer(client):
                 print(f'coefficient = {coefficient}')
 
 async def send_message(count_sent: int, all_chats: int):
-    while True:
-        message = f'✉️ Статистика рассылки \n' \
-            f'Отправлено сообщений: {count_sent} \n' \
-            f'Всего чатов: {all_chats} \n'
-        for chat_id in (391421988, 1149861352):
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-            try:
-                timeout = aiohttp.ClientTimeout(total=30)
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.post(url, data={"chat_id": chat_id, "text": message}) as response:
-                        if response.status == 200:
-                            print(f'Сообщение в диалог {chat_id} отправлено')
-            except Exception as e:
-                print('Не удалось отправить сообщение в телеграм. ', e)
-        await asyncio.sleep((60 - datetime.now().minute) * 60)
+    message = f'✉️ Статистика рассылки \n' \
+        f'Отправлено сообщений: {count_sent} \n' \
+        f'Всего чатов: {all_chats} \n'
+    for chat_id in (391421988, 1149861352):
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        try:
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(url, data={"chat_id": chat_id, "text": message}) as response:
+                    if response.status == 200:
+                        print(f'Сообщение в диалог {chat_id} отправлено')
+        except Exception as e:
+            print('Не удалось отправить сообщение в телеграм. ', e)
+    # await asyncio.sleep((60 - datetime.now().minute) * 60)
 
 if __name__ == '__main__':
     with open('count_start.txt', 'r') as file:
